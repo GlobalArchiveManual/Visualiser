@@ -1,0 +1,12 @@
+name: Visualiser
+title: Visualiser
+username:
+account: globalarchive
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3336514
+bundleId: 3937111
+url: https://globalarchive.shinyapps.io/Visualiser/
+when: 1606982500.68146
+asMultiple: FALSE
+asStatic: FALSE
