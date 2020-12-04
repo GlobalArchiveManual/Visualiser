@@ -45,6 +45,23 @@ function(input, output, session) {
     
   })
   
+  # LENGTH - RAW DATAFRAME-----
+  length.raw <- reactive({
+    # If no file in upload read in montebello example data 
+    if(is.null(input$upload.length)){
+      length.raw <- fst::read_fst("data/montebello.example.complete.length.fst")%>%
+        as.data.frame()
+    }
+    else{
+      # Read in FST data when uploaded
+      length.raw <- fst::read_fst(input$upload.length$datapath)%>%
+        as.data.frame()}
+    # Save length data
+    length.raw <- length.raw
+    
+  })
+  
+  
   # COUNT SUMMARY - CAMPAIGN DROPDOWN ----
   output$countsummary.campaign <- renderUI({
     
@@ -62,6 +79,26 @@ function(input, output, session) {
     
     # Update dropdown menus
     create_dropdown("countsummary.campaign", options, "Choose a campaign:")
+    
+  })
+  
+  # LENGTH SUMMARY - CAMPAIGN DROPDOWN ----
+  output$lengthsummary.campaign <- renderUI({
+    
+    # Use length data
+    df <- length.raw()
+    
+    # Create a list of campaignIDs
+    options <- df %>%
+      dplyr::distinct(campaignid) %>% 
+      pull("campaignid")%>%
+      sort()
+    
+    # Add "All" as an option 
+    options <- c("All", options)
+    
+    # Update dropdown menus
+    create_dropdown("lengthsummary.campaign", options, "Choose a campaign:")
     
   })
   
@@ -129,7 +166,8 @@ function(input, output, session) {
                       'Trophic group'=trophic.group,
                       'Target group'=target.group,
                       'Common name'=australian.common.name,
-                      CAAB=caab)
+                      CAAB=caab)%>%
+        dplyr::select(-fish.names)
       
       count$'Trophic group' <- sub("^$", "Missing trophic group", count$'Trophic group')
     }
@@ -173,6 +211,75 @@ function(input, output, session) {
     )
   )
   
+  # LENGTH SUMMARY ----
+  lengthsummary.data <- reactive({
+    
+    sum.length.data <- length.raw()
+    
+    if (input$lengthsummary.campaign == "All") {
+      sum.length.data
+      
+    } else {
+      sum.length.data<-sum.length.data%>%
+        filter(campaignid == as.character(input$lengthsummary.campaign))
+    }
+    
+    if (input$lengthsummary.groupby=="Species") {
+      
+      length.data <- sum.length.data%>%
+        filter(length>0)%>%
+        dplyr::group_by(family,genus,species)%>%
+        dplyr::summarise(Total.measured=sum(number),Number.of.samples=length(unique(id)),Mean.length=mean(length),Min.length=min(length),Max.length=max(length))%>%
+        mutate(Mean.length=round(Mean.length, digits=2))%>%
+        mutate(Min.length=round(Min.length, digits=2))%>%
+        mutate(Max.length=round(Max.length, digits=2))%>%
+        ungroup()%>%
+        arrange(-Total.measured)%>%
+        left_join(.,life.history)%>%
+        dplyr::rename(Family=family,Genus=genus,Species=species,'Trophic group'=trophic.group,"Target group"=target.group,'Total measured'=Total.measured,'Number of samples'=Number.of.samples,'Mean length'=Mean.length,'Min length'=Min.length,'Max length'=Max.length,'Common name'=australian.common.name)%>%
+        dplyr::select(-fish.names)
+      
+    }
+    
+    if (input$lengthsummary.groupby=="Target group") {
+      length.data <- sum.length.data%>%
+        filter(length>0)%>%
+        left_join(life.history)%>%
+        replace_na(list(target.group="Non-target"))%>%
+        dplyr::group_by(target.group)%>%
+        dplyr::summarise(Total.measured=sum(number),Number.of.samples=length(unique(id)),Mean.length=mean(length),Min.length=min(length),Max.length=max(length))%>%
+        mutate(Mean.length=round(Mean.length, digits=2))%>%
+        mutate(Min.length=round(Min.length, digits=2))%>%
+        mutate(Max.length=round(Max.length, digits=2))%>%
+        ungroup()%>%
+        arrange(-Total.measured)%>%
+        dplyr::rename('Total measured'=Total.measured,'Number of samples'=Number.of.samples,'Mean length'=Mean.length,'Min length'=Min.length,'Max length'=Max.length,'Target group'=target.group)
+    }
+    
+    if (input$lengthsummary.groupby=="Trophic group") {
+      length.data <- sum.length.data%>%
+        dplyr::filter(length>0)%>%
+        dplyr::left_join(life.history)%>%
+        replace_na(list(trophic.group="Missing trophic group"))%>%
+        dplyr::group_by(trophic.group)%>%
+        dplyr::summarise(Total.measured=sum(number),Number.of.samples=length(unique(id)),Mean.length=mean(length),Min.length=min(length),Max.length=max(length))%>%
+        dplyr::mutate(Mean.length=round(Mean.length, digits=2))%>%
+        dplyr::mutate(Min.length=round(Min.length, digits=2))%>%
+        dplyr::mutate(Max.length=round(Max.length, digits=2))%>%
+        ungroup()%>%
+        arrange(-Total.measured)%>%
+        dplyr::rename('Total measured'=Total.measured,'Number of samples'=Number.of.samples,'Mean length'=Mean.length,'Min length'=Min.length,'Max length'=Max.length, 'Trophic group'=trophic.group)
+    }
+    length.data 
+  })
+  
+  output$lengthsummary.table <- DT::renderDataTable(
+    DT::datatable(lengthsummary.data(), options = list( #
+      lengthMenu = list(c(10, 25, 50, -1), c('10', '25','50', 'All')),
+      pageLength = 15, rownames= FALSE,digits=2)
+    )
+  )
+  
   # COUNT SPECIES - CAMPAIGN DROPDOWN ----
   output$countspecies.campaign <- renderUI({
     
@@ -190,6 +297,26 @@ function(input, output, session) {
     
     # Update dropdown menus
     create_dropdown("countspecies.campaign", options, " ")
+    
+  })
+  
+  # LENGTH SPECIES - CAMPAIGN DROPDOWN ----
+  output$lengthspecies.campaign <- renderUI({
+    
+    # Use length data
+    df <- count.raw()
+    
+    # Create a list of campaignIDs
+    options <- df %>%
+      dplyr::distinct(campaignid) %>% 
+      pull("campaignid")%>%
+      sort()
+    
+    # Add "All" as an option 
+    options <- c("All", options)
+    
+    # Update dropdown menus
+    create_dropdown("lengthspecies.campaign", options, " ")
     
   })
   
@@ -229,6 +356,42 @@ function(input, output, session) {
     }
   })
   
+  # LENGTH - FISH NAMES DROPDOWN ----
+  output$lengthspecies.names <- renderUI({
+    if (input$lengthspecies.campaign == "All") {
+      
+      df<-length.raw()%>%
+        left_join(life.history)
+      
+      options <- df %>%
+        dplyr::filter(number>0)%>%
+        dplyr::distinct(fish.names) %>%
+        pull("fish.names")%>%
+        sort()
+      
+      create_dropdown("lengthspecies.names", options, " ")
+      
+    } else {
+      
+      df<-length.raw()%>%
+        left_join(life.history)
+      
+      common.to.keep<-df%>%
+        dplyr::filter(number>0)%>%
+        dplyr::filter(campaignid == input$lengthspecies.campaign)%>%
+        distinct(fish.names)
+      
+      options <- df %>%
+        dplyr::filter(campaignid == input$lengthspecies.campaign) %>%
+        dplyr::semi_join(common.to.keep)%>%
+        dplyr::distinct(fish.names) %>%
+        pull("fish.names")%>%
+        sort()
+      
+      create_dropdown("lengthspecies.names", options, " ")
+    }
+  })
+  
 
   # COUNT SPECIES - DATAFRAME ----
   countspecies <- reactive({
@@ -247,7 +410,24 @@ function(input, output, session) {
   }
   })
   
-# COUNT SPECIES - SPATIAL PLOT ----
+  # LENGTH SPECIES - DATAFRAME ----
+  lengthspecies <- reactive({
+    lengthspecies <-length.raw() %>%
+      dplyr::left_join(life.history)%>%
+      dplyr::filter(fish.names == input$lengthspecies.names)%>%
+      dplyr::select(-c(depth,observer,successful.count,successful.length))
+    
+    if (input$lengthspecies.campaign == "All") {
+      lengthspecies <- lengthspecies
+      
+    } else {
+      
+      lengthspecies %>%
+        filter(campaignid == input$lengthspecies.campaign)
+    }
+  })
+  
+  # COUNT SPECIES - SPATIAL PLOT ----
   output$countspecies.spatial.plot <- renderLeaflet({
     map <- leaflet(countspecies()) %>%
       addTiles()%>%
@@ -383,6 +563,44 @@ function(input, output, session) {
   })
   
   
+  
+  # LENGTH SPECIES - HISTOGRAM ----
+  output$lengthspecies.histogram.plot <- renderPlot({
+    if(input$lengthspecies.theme=="Black and white"){
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey90", "No-take" = "grey40"))
+    }else{
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey", "No-take" = "#1470ad"))
+    }
+    
+    ggplot(lengthspecies(),aes(x = length,  fill=status), col = "black",alpha=0.5)+
+      scale.theme+
+      geom_histogram(alpha=0.5, position="identity",binwidth=input$length.binwidth,col="black")+
+      xlab("Length (mm)") + ylab("Count") +
+      theme_bw() +
+      scale_y_continuous(expand = expand_scale(mult = c(0, .1)))+
+      Theme1
+  })
+  
+  # LENGTH SPECIES PLOT - STATUS ----
+  output$lengthspecies.status.plot <- renderPlot({
+    
+    if(input$lengthspecies.theme=="Black and white"){
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey90", "No-take" = "grey40"))
+    }else{
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey", "No-take" = "#1470ad"))
+    }
+    
+    ggplot(lengthspecies(),aes(x = factor(status), y = length,  fill = status, notch=FALSE, outlier.shape = NA),alpha=0.5) + 
+      theme( panel.background = element_blank(),axis.line = element_line(colour = "black"))+
+      stat_boxplot(geom='errorbar')+
+      scale.theme+
+      geom_boxplot(outlier.color = NA, notch=FALSE)+
+      stat_summary(fun.y=mean, geom="point", shape=23, size=4)+ #this is adding the dot for the mean
+      scale_y_continuous(expand = expand_scale(mult = c(0, .1)))+
+      xlab("Status") + ylab("Length (mm)") +
+      theme_bw() +
+      Theme1
+  })
   # COUNT METRICS - CAMPAIGN DROPDOWN ----
   output$countmetrics.campaign <- renderUI({
     

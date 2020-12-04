@@ -9,7 +9,7 @@ tagList(
                  menuSubItem("Summary", tabName = "countsummary",icon = icon("table", lib="font-awesome")),
                  menuSubItem("Plot species trends", tabName = "countspecies",icon = icon("chart-bar", lib="font-awesome")),
                  menuSubItem("Plot metrics", tabName = "countmetrics",icon = icon("plus", lib="font-awesome"))),
-        menuItem("Length", tabName = "lengthsummary", icon = icon("ruler", lib="font-awesome"),
+        menuItem("Length", tabName = "length", icon = icon("ruler", lib="font-awesome"),
                  menuSubItem("Summary", tabName = "lengthsummary",icon = icon("table", lib="font-awesome")),
                  menuSubItem("Plot species trends", tabName = "lengthspecies",icon = icon("chart-bar", lib="font-awesome")),
                  menuSubItem("Plot metrics", tabName = "lengthmetrics",icon = icon("plus", lib="font-awesome"))),
@@ -174,6 +174,71 @@ tagList(
                                 box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
                                     title="Site",
                                     plotOutput(outputId = "countmetrics.site.plot", height = "300px")))
+                )
+        ),
+        
+        # Length summary -----
+        tabItem(tabName = "lengthsummary",
+                
+                # count summary - two Dropdowns (1. CampaignID, 2. Summarise by: Species, Trophic Group, Target Group)
+                #               - two Tables (1. Campaign level summary, 2. species level summary)
+                
+                fluidRow(tags$head(tags$style(HTML("
+    .shiny-split-layout > div {
+      overflow: visible;
+    }
+  "))),
+                    
+                         box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                             title = 'Table 1. Length summaries.',
+                             splitLayout(cellArgs = list(style = "padding: 6px"),
+                                         htmlOutput("lengthsummary.campaign", multiple=FALSE),
+                                         selectInput("lengthsummary.groupby", "Summarise by:",
+                                                     c("Species" = "Species",
+                                                       "Target group" = "Target group",
+                                                       "Trophic group" = "Trophic group"))),
+                             br(),
+                             DT::dataTableOutput('lengthsummary.table'))
+                )
+        ),
+        # LENGTH species -----
+        tabItem(tabName = "lengthspecies",
+                
+                fluidRow(column(width = 3,
+                                box(#width = 3,
+                                  width = NULL,
+                                  title = "Choose a campaign:", status = "primary", solidHeader = TRUE,
+                                  htmlOutput("lengthspecies.campaign",multiple=FALSE)),
+                                
+                                # Select Common name, Family, Genus and Species
+                                box(#width = 3,
+                                  width = NULL,
+                                  status = "primary", solidHeader = TRUE, 
+                                  title = "Select a species:",
+                                  htmlOutput("lengthspecies.names")),
+                                
+                                # plot theme
+                                box(#width = 3,
+                                  width = NULL,
+                                  title="Choose theme for plots:", status = "primary", solidHeader = TRUE, 
+                                  collapsible = TRUE,
+                                  selectInput("lengthspecies.theme", "", 
+                                              choices = c("GlobalArchive",
+                                                          "Black and white"), multiple = FALSE)),
+                                box(width=NULL,
+                                    title="Adjust binwidth of histogram:", status = "primary", solidHeader = TRUE, 
+                                    collapsible = TRUE,
+                                    numericInput("length.binwidth","", value = 5))),
+                         
+                         
+                         column(width=9,
+                                box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                                    title="Histogram",
+                                    plotOutput(outputId = "lengthspecies.histogram.plot", height = "300px")),
+                                box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                                    title="Boxplot",
+                                    plotOutput(outputId = "lengthspecies.status.plot", height = "300px")))
+                                
                 )
         ),
         
