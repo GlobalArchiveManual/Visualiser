@@ -105,6 +105,7 @@ function(input, output, session) {
   # SUMMARIES ----
   # COUNT CAMPAIGN SUMMARY----
   countsummary.campaigndata <- reactive({
+    
     count <- count.raw()
     
     count <- count%>%
@@ -133,6 +134,8 @@ function(input, output, session) {
   
   # Groub by species, trophic or target summary ----
   countsummary.groupbydata <- reactive({
+    req(input$countsummary.campaign)
+    req(input$countsummary.groupby)
     
     count <- count.raw()
     
@@ -214,6 +217,8 @@ function(input, output, session) {
   # LENGTH SUMMARY ----
   lengthsummary.data <- reactive({
     
+    req(input$lengthsummary.campaign)
+    
     sum.length.data <- length.raw()
     
     if (input$lengthsummary.campaign == "All") {
@@ -282,6 +287,7 @@ function(input, output, session) {
   
   # COUNT SPECIES - CAMPAIGN DROPDOWN ----
   output$countspecies.campaign <- renderUI({
+
     
     # Use count data
     df <- count.raw()
@@ -302,7 +308,6 @@ function(input, output, session) {
   
   # LENGTH SPECIES - CAMPAIGN DROPDOWN ----
   output$lengthspecies.campaign <- renderUI({
-    
     # Use length data
     df <- count.raw()
     
@@ -322,6 +327,9 @@ function(input, output, session) {
   
   # COUNT - FISH NAMES DROPDOWN ----
   output$countspecies.names <- renderUI({
+    
+    req(input$countspecies.campaign)
+    
     if (input$countspecies.campaign == "All") {
       
       df<-count.raw()%>%
@@ -358,6 +366,9 @@ function(input, output, session) {
   
   # LENGTH - FISH NAMES DROPDOWN ----
   output$lengthspecies.names <- renderUI({
+    
+    req(input$lengthspecies.campaign)
+    
     if (input$lengthspecies.campaign == "All") {
       
       df<-length.raw()%>%
@@ -395,6 +406,9 @@ function(input, output, session) {
 
   # COUNT SPECIES - DATAFRAME ----
   countspecies <- reactive({
+    req(input$countspecies.names)
+    req(input$countspecies.campaign)
+    
     countspecies <-count.raw() %>%
       dplyr::left_join(life.history)%>%
       dplyr::filter(fish.names == input$countspecies.names)%>%
@@ -412,6 +426,10 @@ function(input, output, session) {
   
   # LENGTH SPECIES - DATAFRAME ----
   lengthspecies <- reactive({
+    
+    req(input$lengthspecies.names)
+    req(input$lengthspecies.campaign)
+    
     lengthspecies <-length.raw() %>%
       dplyr::left_join(life.history)%>%
       dplyr::filter(fish.names == input$lengthspecies.names)%>%
@@ -429,6 +447,7 @@ function(input, output, session) {
   
   # COUNT SPECIES - SPATIAL PLOT ----
   output$countspecies.spatial.plot <- renderLeaflet({
+    
     map <- leaflet(countspecies()) %>%
       addTiles()%>%
       fitBounds(~min(longitude), ~min(latitude), ~max(longitude), ~max(latitude))
@@ -698,7 +717,7 @@ function(input, output, session) {
     })
   
   
-  # LENGTH METRICS - DATAc ----
+  # LENGTH METRICS - DATA ----
   lengthmetrics <- reactive({
     req(input$lengthmetrics.campaign)
     
@@ -739,6 +758,9 @@ function(input, output, session) {
   # COUNT METRIC - SPATIAL PLOT ----
   output$countmetrics.spatial.plot <- renderLeaflet({
     
+    req(input$countmetrics.metric)
+    req(input$countmetrics.campaign)
+    
     data<-countmetrics.data()%>%
       as.data.frame()%>%
       dplyr::filter(metric == input$countmetrics.metric)
@@ -772,6 +794,8 @@ function(input, output, session) {
   
   # COUNT METRIC - STATUS ----
   output$countmetrics.status.plot <- renderPlot({
+    req(input$countmetrics.metric)
+    req(input$countmetrics.campaign)
     
     count.per.sample<-countmetrics.data()%>%
       as.data.frame()%>%
@@ -803,7 +827,12 @@ function(input, output, session) {
       annotation_custom(grob.metric)
   })
   # COUNT METRIC - LOCATION ----
+
+  
   output$countmetrics.location.plot <- renderPlot({
+    
+    req(input$countmetrics.metric)
+    req(input$countmetrics.campaign)
     
     count.per.sample <- countmetrics.data()%>%
       as.data.frame()%>%
@@ -851,8 +880,10 @@ function(input, output, session) {
   })
   
   
-  # LENGTH METRIC - TARGET ----
+  # LENGTH METRIC - TARGET PLOT ----
   output$lengthmetrics.target.plot <- renderPlot({
+    
+    req(input$lengthmetrics.campaign)
     
     lengthmetrics<-lengthmetrics()%>%
       as.data.frame()%>%
@@ -888,8 +919,9 @@ function(input, output, session) {
     
   })
   
-  # LENGTH METRIC - TARGET ----
+  # LENGTH METRIC - TROPHIC PLOT----
   output$lengthmetrics.trophic.plot <- renderPlot({
+    req(input$lengthmetrics.campaign)
     
     lengthmetrics<-lengthmetrics()%>%
       as.data.frame()%>%
