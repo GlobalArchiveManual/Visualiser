@@ -242,6 +242,35 @@ tagList(
                 )
         ),
         
+        # LENGTH species -----
+        tabItem(tabName = "lengthmetrics",
+                
+                fluidRow(column(width = 3,
+                                box(width = NULL,
+                                  title = "Choose a campaign:", status = "primary", solidHeader = TRUE,
+                                  htmlOutput("lengthmetrics.campaign",multiple=FALSE)),
+                                
+                                # plot theme
+                                box(width = NULL,
+                                  title="Choose theme for plots:", status = "primary", solidHeader = TRUE, 
+                                  collapsible = TRUE,
+                                  selectInput("lengthmetrics.theme", "", 
+                                              choices = c("GlobalArchive",
+                                                          "Black and white"), multiple = FALSE))),
+                         
+                         
+                         column(width=9,
+                                box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                                    title="Target Group",
+                                    plotOutput(outputId = "lengthmetrics.target.plot", height = "300px")),
+                                box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                                    title="Trophic Group",
+                                    plotOutput(outputId = "lengthmetrics.trophic.plot", height = "300px")))
+                         
+                )
+        ),
+        
+        
         # Acknowledgments ----
         tabItem(tabName = "acknowledgements",
                 fluidRow(box(width = 4, status = "primary", height = 800,

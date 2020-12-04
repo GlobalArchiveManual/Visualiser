@@ -620,7 +620,26 @@ function(input, output, session) {
     
   })
   
-  # COUNT METRIC -DATA ----
+  # LENGTH METRICS - CAMPAIGN DROPDOWN ----
+  output$lengthmetrics.campaign <- renderUI({
+    
+    # Use length data
+    df <- length.raw()
+    
+    # Create a list of campaignIDs
+    options <- df %>%
+      dplyr::distinct(campaignid) %>% 
+      pull("campaignid")%>%
+      sort()
+    
+    # Add "All" as an option 
+    options <- c("All", options)
+    
+    create_dropdown("lengthmetrics.campaign", options, " ")
+    
+  })
+  
+  # COUNT METRICS -DATA ----
   countmetrics.data <- reactive({
     req(input$countmetrics.campaign)
     
@@ -677,6 +696,45 @@ function(input, output, session) {
     unique(assemblage$campaignid)
     assemblage
     })
+  
+  
+  # LENGTH METRICS - DATAc ----
+  lengthmetrics <- reactive({
+    req(input$lengthmetrics.campaign)
+    
+    length<-length.raw()
+    
+    if (input$lengthmetrics.campaign == "All") {
+      length<-length
+      
+    } else {
+      campaign.name <- input$lengthmetrics.campaign
+      
+      length<-length%>%
+        filter(campaignid==campaign.name)
+    }
+    
+   trophic<-length%>%
+      left_join(.,life.history)%>%
+      replace_na(list(trophic.group="Missing trophic group"))%>%
+      dplyr::mutate(metric="Trophic group")%>%
+      dplyr::rename(level=trophic.group)%>%
+      glimpse()
+    
+    target<-length%>%
+      left_join(life.history)%>%
+      tidyr::replace_na(list(target.group="Non-target"))%>%
+      dplyr::mutate(metric="Target group")%>%
+      dplyr::rename(level=target.group)%>%
+      glimpse()
+    
+    metric.dat <- bind_rows(trophic, target)
+    metric.dat
+    
+  })
+  
+
+
   
   # COUNT METRIC - SPATIAL PLOT ----
   output$countmetrics.spatial.plot <- renderLeaflet({
@@ -792,6 +850,80 @@ function(input, output, session) {
       annotation_custom(grob.metric)
   })
   
+  
+  # LENGTH METRIC - TARGET ----
+  output$lengthmetrics.target.plot <- renderPlot({
+    
+    lengthmetrics<-lengthmetrics()%>%
+      as.data.frame()%>%
+      dplyr::filter(metric == "Target group")
+    
+    posn.d <- position_dodge(0.75)
+    
+    
+    stats.dat<-lengthmetrics%>%
+      dplyr::group_by(level)%>%
+      dplyr::summarise(max=max(boxplot.stats(length)$stats))%>%
+      dplyr::summarise(max=max(max))%>%
+      as.data.frame()
+    
+    if(input$lengthmetrics.theme=="Black and white"){
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey90", "No-take" = "grey40"))
+    }else{
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey", "No-take" = "#1470ad"))
+    }
+    
+    ggplot(lengthmetrics,aes(x = level, y = length, fill=status, notch=FALSE, outlier.shape = NA)) + 
+      stat_boxplot(geom='errorbar')+
+      geom_boxplot(outlier.color = NA, notch=FALSE)+
+      stat_summary(fun.y=mean, geom="point", shape=23, size=4, position=posn.d)+ #this is adding the dot for the mean
+      theme_bw()+
+      xlab("") + ylab("Length (mm)") +
+      scale.theme+
+      ggtitle("Plot of length by Status") +
+      theme_bw()+
+      scale_y_continuous(expand = expand_scale(mult = c(0, .1)))+
+      Theme1+
+      coord_cartesian(ylim = c(0,max(stats.dat)*1.15)) #1.45
+    
+  })
+  
+  # LENGTH METRIC - TARGET ----
+  output$lengthmetrics.trophic.plot <- renderPlot({
+    
+    lengthmetrics<-lengthmetrics()%>%
+      as.data.frame()%>%
+      dplyr::filter(metric == "Trophic group")
+    
+    posn.d <- position_dodge(0.75)
+    
+    
+    stats.dat<-lengthmetrics%>%
+      dplyr::group_by(level)%>%
+      dplyr::summarise(max=max(boxplot.stats(length)$stats))%>%
+      dplyr::summarise(max=max(max))%>%
+      as.data.frame()
+    
+    if(input$lengthmetrics.theme=="Black and white"){
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey90", "No-take" = "grey40"))
+    }else{
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey", "No-take" = "#1470ad"))
+    }
+    
+    ggplot(lengthmetrics,aes(x = level, y = length, fill=status, notch=FALSE, outlier.shape = NA)) + 
+      stat_boxplot(geom='errorbar')+
+      geom_boxplot(outlier.color = NA, notch=FALSE)+
+      stat_summary(fun.y=mean, geom="point", shape=23, size=4, position=posn.d)+ #this is adding the dot for the mean
+      theme_bw()+
+      xlab("") + ylab("Length (mm)") +
+      scale.theme+
+      ggtitle("Plot of length by Status") +
+      theme_bw()+
+      scale_y_continuous(expand = expand_scale(mult = c(0, .1)))+
+      Theme1+
+      coord_cartesian(ylim = c(0,max(stats.dat)*1.15)) #1.45
+    
+  })
 }
 
 
