@@ -40,7 +40,8 @@ function(input, output, session) {
       count.raw <- fst::read_fst(input$upload.count$datapath)%>%
         as.data.frame()}
     # Save count data
-    count.raw <- count.raw
+    count.raw <- count.raw%>%
+      dplyr::mutate(status = fct_recode(status, "No-take" = "No-take", "No-take" = "NoTake", "No-take" = "No Take", "Fished" = "FISHED","Fished" = "Outside","Fished" = "Fishes", "Fished" = "FishedNoTrawl", "Fished"="FALSE","No-take" = "MPA", "No-take" = "Reserve","No-take" = "No take", "No-take" = "Not Fished", "No-take" = "Port","Fished"="CMR","No-take"="No-Take"))
     
   })
   
@@ -56,7 +57,8 @@ function(input, output, session) {
       length.raw <- fst::read_fst(input$upload.length$datapath)%>%
         as.data.frame()}
     # Save length data
-    length.raw <- length.raw
+    length.raw <- length.raw%>%
+      dplyr::mutate(status = fct_recode(status, "No-take" = "No-take", "No-take" = "NoTake", "No-take" = "No Take", "Fished" = "FISHED","Fished" = "Outside","Fished" = "Fishes", "Fished" = "FishedNoTrawl", "Fished"="FALSE","No-take" = "MPA", "No-take" = "Reserve","No-take" = "No take", "No-take" = "Not Fished", "No-take" = "Port","Fished"="CMR","No-take"="No-Take"))
     
   })
   # MASS - RAW DATAFRAME-----
@@ -72,7 +74,8 @@ function(input, output, session) {
         as.data.frame()}
     
     # Save length data
-    mass.raw <- mass.raw
+    mass.raw <- mass.raw%>%
+      dplyr::mutate(status = fct_recode(status, "No-take" = "No-take", "No-take" = "NoTake", "No-take" = "No Take", "Fished" = "FISHED","Fished" = "Outside","Fished" = "Fishes", "Fished" = "FishedNoTrawl", "Fished"="FALSE","No-take" = "MPA", "No-take" = "Reserve","No-take" = "No take", "No-take" = "Not Fished", "No-take" = "Port","Fished"="CMR","No-take"="No-Take"))
     
   })
   
@@ -446,8 +449,10 @@ function(input, output, session) {
     
     countspecies <-count.raw() %>%
       dplyr::left_join(life.history)%>%
-      dplyr::filter(fish.names == input$countspecies.names)%>%
-      dplyr::select(-c(depth,observer,successful.count,successful.length))
+      dplyr::filter(fish.names == input$countspecies.names)#%>%
+      #dplyr::select(-c(depth,observer,successful.count,successful.length))
+    
+    unique(countspecies$status)
     
   if (input$countspecies.campaign == "All") {
     countspecies
@@ -467,8 +472,8 @@ function(input, output, session) {
     
     lengthspecies <-length.raw() %>%
       dplyr::left_join(life.history)%>%
-      dplyr::filter(fish.names == input$lengthspecies.names)%>%
-      dplyr::select(-c(depth,observer,successful.count,successful.length))
+      dplyr::filter(fish.names == input$lengthspecies.names)#%>%
+      #dplyr::select(-c(depth,observer,successful.count,successful.length))
     
     if (input$lengthspecies.campaign == "All") {
       lengthspecies <- lengthspecies
@@ -811,7 +816,7 @@ function(input, output, session) {
         filter(length>=200)%>%
         tidyr::replace_na(list(target.group="Non-target"))%>%
         dplyr::group_by(campaignid,sample,status,target.group)%>%
-        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::summarise(total.mass=sum(mass.kg))%>%
         dplyr::mutate(metric="Mass of all fish greater than 200 mm")%>%
         replace_na(list(total.mass=0))%>%
         dplyr::rename(level=target.group)
@@ -821,7 +826,7 @@ function(input, output, session) {
         filter(length>=300)%>%
         tidyr::replace_na(list(target.group="Non-target"))%>%
         dplyr::group_by(campaignid,sample,status,target.group)%>%
-        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::summarise(total.mass=sum(mass.kg))%>%
         dplyr::mutate(metric="Mass of all fish greater than 300 mm")%>%
         replace_na(list(total.mass=0))%>%
         dplyr::rename(level=target.group)
@@ -831,7 +836,7 @@ function(input, output, session) {
         filter(length>0)%>%
         tidyr::replace_na(list(target.group="Non-target"))%>%
         dplyr::group_by(campaignid,sample,status,target.group)%>%
-        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::summarise(total.mass=sum(mass.kg))%>%
         dplyr::mutate(metric="Total mass of all fish")%>%
         replace_na(list(total.mass=0))%>%
         dplyr::rename(level=target.group)
@@ -842,7 +847,7 @@ function(input, output, session) {
         filter(length>=200)%>%
         tidyr::replace_na(list(trophic.group="Missing trophic group"))%>%
         dplyr::group_by(campaignid,sample,status,trophic.group)%>%
-        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::summarise(total.mass=sum(mass.kg))%>%
         dplyr::mutate(metric="Mass of all fish greater than 200 mm")%>%
         replace_na(list(total.mass=0))%>%
         dplyr::rename(level=trophic.group)
@@ -852,7 +857,7 @@ function(input, output, session) {
         filter(length>=300)%>%
         tidyr::replace_na(list(trophic.group="Missing trophic group"))%>%
         dplyr::group_by(campaignid,sample,status,trophic.group)%>%
-        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::summarise(total.mass=sum(mass.kg))%>%
         dplyr::mutate(metric="Mass of all fish greater than 300 mm")%>%
         replace_na(list(total.mass=0))%>%
         dplyr::rename(level=trophic.group)
@@ -862,15 +867,15 @@ function(input, output, session) {
         filter(length>0)%>%
         tidyr::replace_na(list(trophic.group="Missing trophic group"))%>%
         dplyr::group_by(campaignid,sample,status,trophic.group)%>%
-        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::summarise(total.mass=sum(mass.kg))%>%
         dplyr::mutate(metric="Total mass of all fish")%>%
         replace_na(list(total.mass=0))%>%
         dplyr::rename(level=trophic.group)
     }
     
-    massmetrics<-bind_rows(over.200,over.300,total.mass)%>%
+    massmetrics<-bind_rows(over.200,over.300,total.mass)#%>%
       #filter(metric==input$mass.metric.selector)%>%
-      mutate(total.mass=total.mass/1000)
+      #mutate(total.mass=total.mass/1000)
     
     massmetrics
   })
