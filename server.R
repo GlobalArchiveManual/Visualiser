@@ -34,8 +34,7 @@ function(input, output, session) {
     # If no file in upload read in montebello example data 
     if(is.null(input$upload.count)){
       count.raw <- fst::read_fst("data/montebello.example.complete.maxn.fst")%>%
-        as.data.frame()
-      }
+        as.data.frame()}
     else{
       # Read in FST data when uploaded
       count.raw <- fst::read_fst(input$upload.count$datapath)%>%
