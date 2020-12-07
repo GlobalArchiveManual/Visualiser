@@ -14,8 +14,8 @@ tagList(
                  menuSubItem("Plot species trends", tabName = "lengthspecies",icon = icon("chart-bar", lib="font-awesome")),
                  menuSubItem("Plot metrics", tabName = "lengthmetrics",icon = icon("plus", lib="font-awesome"))),
         menuItem("Mass", tabName = "mass", icon = icon("weight-hanging", lib="font-awesome"),
-                 menuSubItem("Summary", tabName = "masssummary",icon = icon("table", lib="font-awesome")),
-                 menuSubItem("Plot species trends", tabName = "massspecies",icon = icon("chart-bar", lib="font-awesome")),
+                 #menuSubItem("Summary", tabName = "masssummary",icon = icon("table", lib="font-awesome")),
+                 #menuSubItem("Plot species trends", tabName = "massspecies",icon = icon("chart-bar", lib="font-awesome")),
                  menuSubItem("Plot metrics", tabName = "massmetrics",icon = icon("plus", lib="font-awesome"))),
         menuItem("Acknowledgements", tabName = "acknowledgements", icon = icon("hands-helping", lib="font-awesome"))
       )
@@ -52,10 +52,6 @@ tagList(
         
         # Count summary -----
         tabItem(tabName = "countsummary",
-                
-                # count summary - two Dropdowns (1. CampaignID, 2. Summarise by: Species, Trophic Group, Target Group)
-                #               - two Tables (1. Campaign level summary, 2. species level summary)
-                
                 fluidRow(tags$head(tags$style(HTML("
     .shiny-split-layout > div {
       overflow: visible;
@@ -65,17 +61,6 @@ tagList(
                     status = "primary", solidHeader = TRUE, 
                     DT::dataTableOutput('countsummary.campaigntable')),
                 br(),br(),br(),
-                         
-                         # box(width = 6,title = "Choose a campaign:", status = "primary", solidHeader = TRUE,
-                         #     htmlOutput("countsummary.campaign",multiple=FALSE)),
-                         
-                         # box(width  =6,title = "Summarise by:", status = "primary", solidHeader = TRUE,
-                         #     selectInput("countsummary.groupby", " ",
-                         #                 c("Species" = "Species",
-                         #                   "Target group" = "Target group",
-                         #                   "Trophic group" = "Trophic group"))),
-                         
-                         
                          box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
                              title = 'Table 2. Species, Target level and Trophic level summaries.',
                              splitLayout(cellArgs = list(style = "padding: 6px"),
@@ -88,7 +73,6 @@ tagList(
                              DT::dataTableOutput('countsummary.groupbytable'))
                          )
         ),
-        
         
         # Count species -----
         tabItem(tabName = "countspecies",
@@ -179,10 +163,6 @@ tagList(
         
         # Length summary -----
         tabItem(tabName = "lengthsummary",
-                
-                # count summary - two Dropdowns (1. CampaignID, 2. Summarise by: Species, Trophic Group, Target Group)
-                #               - two Tables (1. Campaign level summary, 2. species level summary)
-                
                 fluidRow(tags$head(tags$style(HTML("
     .shiny-split-layout > div {
       overflow: visible;
@@ -203,7 +183,6 @@ tagList(
         ),
         # LENGTH species -----
         tabItem(tabName = "lengthspecies",
-                
                 fluidRow(column(width = 3,
                                 box(#width = 3,
                                   width = NULL,
@@ -242,7 +221,7 @@ tagList(
                 )
         ),
         
-        # LENGTH species -----
+        # LENGTH metrics -----
         tabItem(tabName = "lengthmetrics",
                 
                 fluidRow(column(width = 3,
@@ -257,8 +236,6 @@ tagList(
                                   selectInput("lengthmetrics.theme", "", 
                                               choices = c("GlobalArchive",
                                                           "Black and white"), multiple = FALSE))),
-                         
-                         
                          column(width=9,
                                 box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
                                     title="Target Group",
@@ -269,7 +246,45 @@ tagList(
                          
                 )
         ),
-        
+
+        # MASS metrics -----
+        tabItem(tabName = "massmetrics",
+                fluidRow(column(width = 3,
+                                box(width = NULL,
+                                    title = "Choose a campaign:", status = "primary", solidHeader = TRUE,
+                                    htmlOutput("massmetrics.campaign",multiple=FALSE)),
+                                
+                                # plot theme
+                                box(width = NULL,
+                                    title="Choose theme for plots:", status = "primary", solidHeader = TRUE, 
+                                    collapsible = TRUE,
+                                    selectInput("massmetrics.theme", "", 
+                                                choices = c("GlobalArchive",
+                                                            "Black and white"), multiple = FALSE)),
+                         
+                         # plot theme
+                         box(width = NULL,
+                             title="Choose group to plot:", status = "primary", solidHeader = TRUE, 
+                             collapsible = TRUE,
+                             selectInput("massmetrics.groupby", " ",
+                                         c("Target group" = "Target group",
+                                           "Trophic group" = "Trophic group")))),
+                         
+                         
+                         column(width=9,
+                                box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                                    title="Total mass of all fish",
+                                    plotOutput(outputId = "massmetrics.all.plot", height = "300px")),
+                                
+                                box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                                    title="Total mass of fish greater than 200 mm",
+                                    plotOutput(outputId = "massmetrics.200.plot", height = "300px")),
+                                
+                                box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                                    title="Total mass of fish greater than 300 mm",
+                                    plotOutput(outputId = "massmetrics.300.plot", height = "300px")))
+                )
+        ),
         
         # Acknowledgments ----
         tabItem(tabName = "acknowledgements",
@@ -286,5 +301,3 @@ tagList(
     )
   )
 )
-
-# fluidRow

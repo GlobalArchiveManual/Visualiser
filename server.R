@@ -1,9 +1,9 @@
 function(input, output, session) {
   
-  # INCREASE SIZE OF FILES UPLOADS ----
+  ## INCREASE SIZE OF FILES UPLOADS ----
   options(shiny.maxRequestSize=50*1024^2)
   
-  # DROPDOWN FUNCTION -----
+  ## DROPDOWN FUNCTION -----
   create_dropdown <- function(input_name, choices, label) {
     if (!is.null(input[[input_name]]) && input[[input_name]] %in% choices) {
       selected <- input[[input_name]]
@@ -19,7 +19,7 @@ function(input, output, session) {
     )
   }
   
-## WORKFLOW IMAGE ----
+  ## WORKFLOW IMAGE ----
 #   output$image.workflow <- renderImage({
 #     return(list(
 #       src = "images/globalarchive-workflow.png", width="50%",align = "center",
@@ -28,7 +28,7 @@ function(input, output, session) {
 #     ))
 #   }, deleteFile = FALSE)
   
-# READ IN DATA ----
+  ### READ IN DATA ----
   # COUNT - RAW DATAFRAME-----
   count.raw <- reactive({
     # If no file in upload read in montebello example data 
@@ -58,6 +58,22 @@ function(input, output, session) {
         as.data.frame()}
     # Save length data
     length.raw <- length.raw
+    
+  })
+  # MASS - RAW DATAFRAME-----
+  mass.raw <- reactive({
+    # If no file in upload read in montebello example data 
+    if(is.null(input$upload.mass)){
+      mass.raw <- fst::read_fst("data/montebello.example.complete.mass.fst")%>%
+        as.data.frame()
+    }
+    else{
+      # Read in FST data when uploaded
+      mass.raw <- fst::read_fst(input$upload.mass$datapath)%>%
+        as.data.frame()}
+    
+    # Save length data
+    mass.raw <- mass.raw
     
   })
   
@@ -98,7 +114,27 @@ function(input, output, session) {
     options <- c("All", options)
     
     # Update dropdown menus
-    create_dropdown("lengthsummary.campaign", options, "Choose a campaign:")
+    create_dropdown("lengthsummary.campaign", options, " ")
+    
+  })
+  
+  # MASS METRICS - CAMPAIGN DROPDOWN ----
+  output$massmetrics.campaign <- renderUI({
+    
+    # Use mass data
+    df <- mass.raw()
+    
+    # Create a list of campaignIDs
+    options <- df %>%
+      dplyr::distinct(campaignid) %>% 
+      pull("campaignid")%>%
+      sort()
+    
+    # Add "All" as an option 
+    options <- c("All", options)
+    
+    # Update dropdown menus
+    create_dropdown("massmetrics.campaign", options, "")
     
   })
   
@@ -752,7 +788,93 @@ function(input, output, session) {
     
   })
   
-
+# MASS METRIC - DATA
+  massmetrics <- reactive({
+    req(input$massmetrics.campaign)
+    req(input$massmetrics.groupby)
+    
+    mass.data<- mass.raw()  
+    
+    if (input$massmetrics.campaign == "All") {
+      mass.data<-mass.data
+      
+    } else {
+      campaign.name <- input$massmetrics.campaign
+      
+      mass.data<-mass.data%>%
+        filter(campaignid==campaign.name)
+    }
+    
+    if (input$massmetrics.groupby == "Target group") {
+      
+      over.200<-mass.data%>%
+        left_join(.,life.history)%>%
+        filter(length>=200)%>%
+        tidyr::replace_na(list(target.group="Non-target"))%>%
+        dplyr::group_by(campaignid,sample,status,target.group)%>%
+        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::mutate(metric="Mass of all fish greater than 200 mm")%>%
+        replace_na(list(total.mass=0))%>%
+        dplyr::rename(level=target.group)
+      
+      over.300<-mass.data%>%
+        left_join(.,life.history)%>%
+        filter(length>=300)%>%
+        tidyr::replace_na(list(target.group="Non-target"))%>%
+        dplyr::group_by(campaignid,sample,status,target.group)%>%
+        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::mutate(metric="Mass of all fish greater than 300 mm")%>%
+        replace_na(list(total.mass=0))%>%
+        dplyr::rename(level=target.group)
+      
+      total.mass<-mass.data%>%
+        left_join(.,life.history)%>%
+        filter(length>0)%>%
+        tidyr::replace_na(list(target.group="Non-target"))%>%
+        dplyr::group_by(campaignid,sample,status,target.group)%>%
+        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::mutate(metric="Total mass of all fish")%>%
+        replace_na(list(total.mass=0))%>%
+        dplyr::rename(level=target.group)
+      
+    } else {
+      over.200<-mass.data%>%
+        left_join(.,life.history)%>%
+        filter(length>=200)%>%
+        tidyr::replace_na(list(trophic.group="Missing trophic group"))%>%
+        dplyr::group_by(campaignid,sample,status,trophic.group)%>%
+        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::mutate(metric="Mass of all fish greater than 200 mm")%>%
+        replace_na(list(total.mass=0))%>%
+        dplyr::rename(level=trophic.group)
+      
+      over.300<-mass.data%>%
+        left_join(.,life.history)%>%
+        filter(length>=300)%>%
+        tidyr::replace_na(list(trophic.group="Missing trophic group"))%>%
+        dplyr::group_by(campaignid,sample,status,trophic.group)%>%
+        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::mutate(metric="Mass of all fish greater than 300 mm")%>%
+        replace_na(list(total.mass=0))%>%
+        dplyr::rename(level=trophic.group)
+      
+      total.mass<-mass.data%>%
+        left_join(.,life.history)%>%
+        filter(length>0)%>%
+        tidyr::replace_na(list(trophic.group="Missing trophic group"))%>%
+        dplyr::group_by(campaignid,sample,status,trophic.group)%>%
+        dplyr::summarise(total.mass=sum(mass.g))%>%
+        dplyr::mutate(metric="Total mass of all fish")%>%
+        replace_na(list(total.mass=0))%>%
+        dplyr::rename(level=trophic.group)
+    }
+    
+    massmetrics<-bind_rows(over.200,over.300,total.mass)%>%
+      #filter(metric==input$mass.metric.selector)%>%
+      mutate(total.mass=total.mass/1000)
+    
+    massmetrics
+  })
 
   
   # COUNT METRIC - SPATIAL PLOT ----
@@ -954,6 +1076,112 @@ function(input, output, session) {
       scale_y_continuous(expand = expand_scale(mult = c(0, .1)))+
       Theme1+
       coord_cartesian(ylim = c(0,max(stats.dat)*1.15)) #1.45
+    
+  })
+  
+  
+  # MASS METRIC - All fish ----
+  output$massmetrics.all.plot <- renderPlot({
+    req(input$massmetrics.campaign)
+    
+    massmetrics<-massmetrics()%>%
+      as.data.frame()%>%
+      dplyr::filter(metric == "Total mass of all fish")
+    
+    posn.d <- position_dodge(0.75)
+    
+    stats.dat<-massmetrics%>%
+      group_by(level)%>%
+      summarise(max=max(boxplot.stats(total.mass)$stats))%>%
+      summarise(max=max(max))%>%
+      as.data.frame()
+    
+    if(input$massmetrics.theme=="Black and white"){
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey90", "No-take" = "grey40"))
+    }else{
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey", "No-take" = "#1470ad"))
+    }
+    
+    ggplot(massmetrics, aes(x = level, y=total.mass, fill = status, group=status)) + 
+      stat_summary(fun.y=mean, geom="bar",colour="black",position="dodge") +
+      stat_summary(fun.ymin = se.min, fun.ymax = se.max, geom = "errorbar", width = 0.1,position=posn.d) +
+      geom_hline(aes(yintercept=0))+
+      xlab("")+
+      ylab("Mass per stereo-BRUV (kg) \n(+/- SE)")+
+      scale.theme+
+      theme_bw()+
+      Theme1+
+      scale_y_continuous(expand = expand_scale(mult = c(0, .1)))
+    
+  })
+  
+  # MASS METRIC - Fish greater than 200 m ----
+  output$massmetrics.200.plot <- renderPlot({
+    req(input$massmetrics.campaign)
+    
+    massmetrics<-massmetrics()%>%
+      as.data.frame()%>%
+      dplyr::filter(metric == "Mass of all fish greater than 200 mm")
+    
+    posn.d <- position_dodge(0.75)
+    
+    stats.dat<-massmetrics%>%
+      group_by(level)%>%
+      summarise(max=max(boxplot.stats(total.mass)$stats))%>%
+      summarise(max=max(max))%>%
+      as.data.frame()
+    
+    if(input$massmetrics.theme=="Black and white"){
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey90", "No-take" = "grey40"))
+    }else{
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey", "No-take" = "#1470ad"))
+    }
+    
+    ggplot(massmetrics, aes(x = level, y=total.mass, fill = status, group=status)) + 
+      stat_summary(fun.y=mean, geom="bar",colour="black",position="dodge") +
+      stat_summary(fun.ymin = se.min, fun.ymax = se.max, geom = "errorbar", width = 0.1,position=posn.d) +
+      geom_hline(aes(yintercept=0))+
+      xlab("")+
+      ylab("Mass per stereo-BRUV (kg) \n(+/- SE)")+
+      scale.theme+
+      theme_bw()+
+      Theme1+
+      scale_y_continuous(expand = expand_scale(mult = c(0, .1)))
+    
+  })
+  
+  # MASS METRIC - Fish greater than 300 m ----
+  output$massmetrics.300.plot <- renderPlot({
+    req(input$massmetrics.campaign)
+    
+    massmetrics<-massmetrics()%>%
+      as.data.frame()%>%
+      dplyr::filter(metric == "Mass of all fish greater than 300 mm")
+    
+    posn.d <- position_dodge(0.75)
+    
+    stats.dat<-massmetrics%>%
+      group_by(level)%>%
+      summarise(max=max(boxplot.stats(total.mass)$stats))%>%
+      summarise(max=max(max))%>%
+      as.data.frame()
+    
+    if(input$massmetrics.theme=="Black and white"){
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey90", "No-take" = "grey40"))
+    }else{
+      scale.theme<-scale_fill_manual(values = c("Fished" = "grey", "No-take" = "#1470ad"))
+    }
+    
+    ggplot(massmetrics, aes(x = level, y=total.mass, fill = status, group=status)) + 
+      stat_summary(fun.y=mean, geom="bar",colour="black",position="dodge") +
+      stat_summary(fun.ymin = se.min, fun.ymax = se.max, geom = "errorbar", width = 0.1,position=posn.d) +
+      geom_hline(aes(yintercept=0))+
+      xlab("")+
+      ylab("Mass per stereo-BRUV (kg) \n(+/- SE)")+
+      scale.theme+
+      theme_bw()+
+      Theme1+
+      scale_y_continuous(expand = expand_scale(mult = c(0, .1)))
     
   })
 }
