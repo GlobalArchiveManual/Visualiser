@@ -292,7 +292,7 @@ tagList(
                              "     ",HTML('<center><img src="logos-stacked.png" width="100%"></center>')
                              
                 ),
-                box(width = 8, status = "primary", height = 800, title = "Acknowledgments",
+                box(width = 8, status = "primary", height = 800, title = "Acknowledgements",
                     "The Marine Biodiversity Hub is funded by the Australian Government's National Environmental Science Program.",
                     br(),br(),
                     "Montbello example stereo-BRUV data was from the benchmark survey of deepwater fish in the Montbello Marine Park. Funded by the Gorgon Barrow Island Net Conservation Benefits Fund, the Commonwealth Scientific and Industrial Research Organisation and the University of Western Australia.",
