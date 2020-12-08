@@ -289,11 +289,16 @@ tagList(
         # Acknowledgments ----
         tabItem(tabName = "acknowledgements",
                 fluidRow(box(width = 4, status = "primary", height = 800,
-                             "     ",imageOutput("logos")
+                             "     ",HTML('<center><img src="logos-stacked.png" width="100%"></center>')
                              
                 ),
                 box(width = 8, status = "primary", height = 800, title = "Acknowledgments",
-                    "The Marine Biodiversity Hub is funded by the Australian Government's National Environmental Science Program.", br(), br())
+                    "The Marine Biodiversity Hub is funded by the Australian Government's National Environmental Science Program.",
+                    br(),br(),
+                    "Montbello example stereo-BRUV data was from the benchmark survey of deepwater fish in the Montbello Marine Park. Funded by the Gorgon Barrow Island Net Conservation Benefits Fund, the Commonwealth Scientific and Industrial Research Organisation and the University of Western Australia.",
+                    br(),br(),
+                    "GlobalArchive and Visualiser development has been supported by the Australian Research Data Commons and the
+                  National Environmental Science Program's Marine Biodiversity Hub.", br(), br())
                 )
         )
         
