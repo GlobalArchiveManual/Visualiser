@@ -298,7 +298,10 @@ tagList(
                     "Montbello example stereo-BRUV data was from the benchmark survey of deepwater fish in the Montbello Marine Park. Funded by the Gorgon Barrow Island Net Conservation Benefits Fund, the Commonwealth Scientific and Industrial Research Organisation and the University of Western Australia.",
                     br(),br(),
                     "GlobalArchive and Visualiser development has been supported by the Australian Research Data Commons and the
-                  National Environmental Science Program's Marine Biodiversity Hub.", br(), br())
+                  National Environmental Science Program's Marine Biodiversity Hub.", br(), br(),
+                    "Data presented in the ‘Visualiser’ is intended for data exploration only and not designed to be representative. Representative data visualisations require model-based analysis and predictions that account for any sampling biases."
+                    
+                )
                 )
         )
         
