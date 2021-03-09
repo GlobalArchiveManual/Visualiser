@@ -99,6 +99,13 @@ tagList(
                                                    "Black and white"), multiple = FALSE))),
                          
                          column(width=9,
+                                
+                                box(width=11,height = 500,
+                                    title = "Plot of most abundant species", status = "primary",
+                                    plotOutput("count.top.species")),
+                                
+                                box(width=1,title = "Species to plot",status="primary",solidHeader = TRUE,numericInput("species.limit", "Number:", 15, min = 5, max = 20)),
+                                
                                 box(width = 12, status = "primary", solidHeader = TRUE, collapsible = TRUE,
                                     title="Spatial plot",
                                     leafletOutput(outputId = "countspecies.spatial.plot", height = "500px")),

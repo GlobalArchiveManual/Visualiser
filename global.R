@@ -101,6 +101,36 @@ Theme1 <-
     panel.border = element_blank(), 
     axis.line = element_line(colour = "black"))
 
+theme.stacked.plot <-    theme_bw()+
+  theme( # use theme_get() to see available options
+    panel.grid = element_blank(), 
+    panel.border = element_blank(), 
+    axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    legend.background = element_blank(),
+    legend.key = element_blank(), # switch off the rectangle around symbols in the legend
+    legend.text = element_text(size=12),
+    legend.title = element_blank(),
+    #legend.position = "top",
+    text=element_text(size=12),
+    strip.text.y = element_text(size = 12,angle = 0),
+    axis.title.x=element_text(vjust=0.3, size=12),
+    axis.title.y=element_text(vjust=0.6, angle=90, size=12),
+    axis.text.y=element_text(size=12),
+    axis.text.x=element_text(size=12),
+    axis.line.x=element_line(colour="black", size=0.5,linetype='solid'),
+    axis.line.y=element_line(colour="black", size=0.5,linetype='solid'),
+    strip.background = element_blank(),
+    plot.title = element_text(color="black", size=12, face="bold.italic"))
+
+
+theme_collapse<-theme(      ## the commented values are from theme_grey
+  panel.grid.major=element_line(colour = "white"), ## element_line(colour = "white")
+  panel.grid.minor=element_line(colour = "white", size = 0.25), 
+  plot.margin= grid::unit(c(0, 0, 0, 0), "in"))
+
+
 css <- "
 .shiny-output-error { visibility: hidden; }
 .shiny-output-error:before {

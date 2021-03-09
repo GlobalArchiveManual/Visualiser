@@ -485,6 +485,29 @@ function(input, output, session) {
     }
   })
   
+  # COUNT SPECIES -  top species ----
+  output$count.top.species <- renderPlot({
+    count.sum<-count.raw()%>%
+      dplyr::mutate(scientific=paste(genus,species,sep=" "))%>%
+      dplyr::group_by(scientific)%>%
+      dplyr::summarise(maxn=sum(maxn))%>%
+      dplyr::ungroup()%>%
+      top_n(input$species.limit)
+    
+    ## Total frequency of occurance
+    ggplot(count.sum, aes(x=reorder(scientific,maxn), y=maxn)) +   
+      geom_bar(stat="identity",position=position_dodge())+
+      coord_flip()+
+      xlab("Species")+
+      ylab(expression(Overall~abundance~(Sigma~MaxN)))+
+      theme.stacked.plot+
+      theme_collapse+
+      theme(axis.text.y = element_text(face="italic"))+
+      scale_y_continuous(expand = expand_scale(mult = c(0, .1)))#+
+    #theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  })
+  
+  
   # COUNT SPECIES - SPATIAL PLOT ----
   output$countspecies.spatial.plot <- renderLeaflet({
     
@@ -643,6 +666,19 @@ function(input, output, session) {
   # LENGTH SPECIES PLOT - STATUS ----
   output$lengthspecies.status.plot <- renderPlot({
     
+    family.name<-unique(lengthspecies()$family)
+    species.name<-unique(lengthspecies()$species)
+    genus.name<-unique(lengthspecies()$genus)
+    
+    scientific.name<-paste(genus.name,species.name,sep=" ")
+    common.name<-unique(lengthspecies()$australian.common.name)
+    
+    grob.sci <- grobTree(textGrob(as.character(scientific.name), x=0.01,  y=0.97, hjust=0,
+                                  gp=gpar(col="black", fontsize=13, fontface="italic")))
+    grob.com <- grobTree(textGrob(as.character(common.name), x=0.01,  y=0.90, hjust=0,
+                                  gp=gpar(col="black", fontsize=13)))
+    
+    
     if(input$lengthspecies.theme=="Black and white"){
       scale.theme<-scale_fill_manual(values = c("Fished" = "grey90", "No-take" = "grey40"))
     }else{
@@ -658,7 +694,9 @@ function(input, output, session) {
       scale_y_continuous(expand = expand_scale(mult = c(0, .1)))+
       xlab("Status") + ylab("Length (mm)") +
       theme_bw() +
-      Theme1
+      Theme1+
+      annotation_custom(grob.sci)+ 
+      annotation_custom(grob.com)
   })
   # COUNT METRICS - CAMPAIGN DROPDOWN ----
   output$countmetrics.campaign <- renderUI({
